@@ -115,6 +115,17 @@
 
     // ---- top-level dispatch. returns true if the key was consumed. ----
     handleKey(e) {
+      // While an IME composition is in progress (e.g. typing full-width
+      // romaji before conversion), keydown still fires per keystroke but the
+      // browser owns the text — it hasn't been committed to the field yet.
+      // Acting on these (in particular the jj-escape check below) used to
+      // fire "handled" and flip to Normal mode without being able to find a
+      // literal "j" to delete, since what's in the field mid-composition is
+      // whatever full-width/kana text the IME is building, not "j". Leaving
+      // composition keystrokes alone lets the IME finish normally; Escape
+      // during composition also then correctly cancels the composition
+      // itself rather than us swallowing it.
+      if (e.isComposing) return false;
       if (this.mode === "insert") return this.handleInsertKey(e);
       return this.handleNormalOrVisualKey(e, this.mode === "visual");
     }
