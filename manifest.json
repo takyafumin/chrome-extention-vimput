@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Vim for Text Fields",
+  "version": "0.1.0",
+  "description": "Vim風のモーダル編集(Normal/Insert/Visual)をtextarea・input・contenteditableで使えるようにします。",
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Vim for Text Fields",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/vim-engine.js", "src/dom-helpers.js", "src/vim-field.js", "src/content.js"],
+      "css": ["src/content.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
+}

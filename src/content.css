@@ -1,0 +1,3 @@
+/* Mode indicator UI is rendered inside a shadow root (see content.js),
+   so no page-level styles are needed here. Kept as an empty stylesheet
+   entry point in case per-site tweaks are ever required. */

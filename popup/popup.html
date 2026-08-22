@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vim for Text Fields</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <span class="logo">Vim</span>
+      <h1>Vim for Text Fields</h1>
+    </header>
+
+    <section class="row">
+      <label class="switch">
+        <input type="checkbox" id="globalToggle" />
+        <span class="slider"></span>
+      </label>
+      <div class="row-text">
+        <div class="row-title">拡張機能を有効にする</div>
+        <div class="row-sub">すべてのサイトのtextarea / input / contenteditableに適用</div>
+      </div>
+    </section>
+
+    <section class="row">
+      <label class="switch">
+        <input type="checkbox" id="siteToggle" />
+        <span class="slider"></span>
+      </label>
+      <div class="row-text">
+        <div class="row-title">このサイトでは無効にする</div>
+        <div class="row-sub" id="siteHost">-</div>
+      </div>
+    </section>
+
+    <section class="cheatsheet">
+      <div class="cheat-title">よく使うキー</div>
+      <div class="cheat-grid">
+        <span>Esc</span><span>Normalモードへ</span>
+        <span>i / a / I / A</span><span>Insertモードへ</span>
+        <span>h j k l</span><span>移動</span>
+        <span>w b e</span><span>単語移動</span>
+        <span>0 ^ $</span><span>行頭 / 行末</span>
+        <span>x d w / d d</span><span>削除</span>
+        <span>y y / p</span><span>ヤンク / ペースト</span>
+        <span>v / V</span><span>Visual / Visual Line</span>
+        <span>u / Ctrl+r</span><span>Undo / Redo</span>
+        <span>.</span><span>直前の変更を繰り返す</span>
+      </div>
+    </section>
+
+    <footer>フォーカスした直後はInsertモード(通常の入力)です。Escで編集用のNormalモードに入ります。</footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
