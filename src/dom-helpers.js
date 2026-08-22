@@ -17,11 +17,11 @@
   // 残ることがあった。
   const TEXT_INPUT_TYPES = new Set(["text", "search", "url", "tel", "password", ""]);
 
-  /**
-   * 要素が本拡張機能による Vim 風モーダル編集の対象になり得るかを判定する。
-   * @param {Element|null} el 判定対象の要素
-   * @returns {boolean} 対象にできる場合は true
-   */
+   /**
+    * 要素が本拡張機能による Vim 風モーダル編集の対象になり得るかを判定する。
+    * @param {EventTarget|null} el 判定対象（Element 以外の場合は false）
+    * @returns {boolean} 対象にできる場合は true
+    */
   function isEligible(el) {
     if (!el || el.nodeType !== 1) return false;
     if (el.isContentEditable) return true;
