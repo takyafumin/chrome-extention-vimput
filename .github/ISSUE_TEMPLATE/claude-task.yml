@@ -1,0 +1,57 @@
+name: "🤖 Claude 実装依頼"
+description: "内容を書いて作成すると、Claude Codeが自動で着手しPull Requestを作成します"
+title: "[Claude] "
+labels: ["claude"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        このissueを作成すると、GitHub Actions経由でClaude Codeが自動的に着手し、内容に沿ったPull Requestを作成します。
+        実装してほしい内容ができるだけ具体的に伝わるように記入してください。
+
+  - type: textarea
+    id: what
+    attributes:
+      label: やりたいこと
+      description: 実装・修正してほしい内容を具体的に書いてください。
+      placeholder: |
+        例: Visualモードで `V` (Visual Line) 選択中に `~` を押すと大文字/小文字が反転するようにしたい
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: 背景・理由
+      description: なぜ必要か、どんな課題・不便があるかを書いてください。
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了の条件
+      description: どうなっていれば完了とみなせるか、確認方法があれば書いてください。
+      placeholder: |
+        例:
+        - Visualモードで選択範囲の大文字/小文字が反転すること
+        - Normalモードの `~` の挙動は変わらないこと
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 補足・制約
+      description: 触ってほしくないファイルや、実装方針の希望があれば書いてください。
+    validations:
+      required: false
+
+  - type: textarea
+    id: trigger
+    attributes:
+      label: Claude 実行トリガー(編集・削除しないでください)
+      description: 下の一文がこのissueにClaudeを起動させるトリガーです。
+      value: "@claude 上記の内容に沿って実装し、Pull Requestを作成してください。"
+    validations:
+      required: true
