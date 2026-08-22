@@ -1,4 +1,4 @@
-// VimField:1つの DOM 要素に紐づく Normal/Insert/Visual モーダル編集の
+// VimField: 1つの DOM 要素に紐づく Normal/Insert/Visual モーダル編集の
 // 状態マシン。VimTextEngine（純粋なテキスト・インデックス計算）と
 // VimDomHelpers（要素の値・選択範囲の入出力）に依存する。ページへの配線
 // （フォーカス追跡、キーのディスパッチ、モードインジケータ）は content.js
