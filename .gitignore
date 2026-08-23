@@ -21,3 +21,8 @@ build/
 .env
 .env.*
 *.key
+
+# Playwright acceptance tests
+/test-results/
+/playwright-report/
+/playwright/.cache/
