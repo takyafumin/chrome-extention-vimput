@@ -12,11 +12,12 @@ const { startFixtureServer } = require("./server");
 const EXTENSION_PATH = path.join(__dirname, "..", "..");
 
 const test = base.extend({
-  context: async ({}, use) => {
+  context: async ({}, use, testInfo) => {
     const userDataDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "vimput-pw-"));
     const context = await chromium.launchPersistentContext(userDataDir, {
       headless: false,
       args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
+      recordVideo: { dir: testInfo.outputPath("") },
     });
     try {
       await use(context);
