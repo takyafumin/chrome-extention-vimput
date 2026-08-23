@@ -67,6 +67,7 @@
     if (!siteEnabled()) {
       activeField = null;
       activeEl = null;
+      if (indicatorResizeObserver) indicatorResizeObserver.disconnect();
       hideIndicator();
     }
   });
@@ -234,6 +235,7 @@
         if (el === activeEl && !siteEnabled()) {
           activeField = null;
           activeEl = null;
+          if (indicatorResizeObserver) indicatorResizeObserver.disconnect();
           hideIndicator();
         }
       });
