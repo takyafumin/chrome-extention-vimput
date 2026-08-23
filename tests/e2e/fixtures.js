@@ -19,6 +19,10 @@ const test = base.extend({
       args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
       recordVideo: { dir: testInfo.outputPath("") },
     });
+    // launchPersistentContextは起動時に自動でabout:blankタブを1枚開く。
+    // 使われないまま残ると動画エンコード対象が増えてcontext.close()が遅くなるため、即座に閉じる。
+    const [initialPage] = context.pages();
+    if (initialPage) await initialPage.close();
     try {
       await use(context);
     } finally {
