@@ -156,6 +156,18 @@
   let activeField = null;
   let activeEl = null;
 
+  // textarea や contenteditable は改行入力などで高さが自動的に伸び縮みする
+  // ことがある。フォーカス変更・スクロール・ウィンドウリサイズ時にしか
+  // positionIndicator() を呼んでいないと、入力欄の高さが変わってもバッジが
+  // 追従せず、結果的に入力欄の内側に埋もれてしまう。ResizeObserver で
+  // フォーカス中の要素自身のサイズ変化を監視し、そのたびに再配置する。
+  const indicatorResizeObserver =
+    typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => {
+          if (activeField) positionIndicator(activeField.el);
+        })
+      : null;
+
   /**
    * 要素に対応する VimField インスタンスを取得する。まだ無ければ生成してキャッシュする。
    * @param {Element} el 対象要素
@@ -228,11 +240,16 @@
       if (!siteEnabled() || !D.isEligible(el)) {
         activeField = null;
         activeEl = null;
+        if (indicatorResizeObserver) indicatorResizeObserver.disconnect();
         hideIndicator();
         return;
       }
       activeEl = el;
       activeField = getField(el);
+      if (indicatorResizeObserver) {
+        indicatorResizeObserver.disconnect();
+        indicatorResizeObserver.observe(el);
+      }
       if (activeField.preserveModeOnNextFocus) {
         // ちょうど自分自身でフォーカスを取り戻した直後（下の keydown
         // ハンドラを参照）で、制御外の何かによってフィールドが blur
@@ -255,6 +272,7 @@
       if (e.target === activeEl) {
         activeField = null;
         activeEl = null;
+        if (indicatorResizeObserver) indicatorResizeObserver.disconnect();
         hideIndicator();
       }
     },
