@@ -853,10 +853,21 @@
       const text = this.getText();
 
       switch (e.key) {
-        case "Escape":
-          if (isVisual) this.exitVisual();
+        case "Escape": {
+          if (isVisual) {
+            this.exitVisual();
+            this.resetPending();
+            return true;
+          }
+          // 保留中のカウント・オペレータがある場合は、通常の Vim と同様に
+          // それらのキャンセルのみを行う。何も保留していない Normal モード
+          // での Escape は、通常のブラウザ操作と同様にフィールドから
+          // フォーカスを外す（lost focus）。
+          const hadPending = this.pendingOperator !== null || this.countBuf !== "";
           this.resetPending();
+          if (!hadPending) this.el.blur();
           return true;
+        }
 
         case "h":
         case "ArrowLeft":
