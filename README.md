@@ -60,3 +60,16 @@ Chromeの`<textarea>`・`<input>`・`contenteditable`要素にVim風のモーダ
 
 - `globalEnabled`(全体のON/OFF)は`chrome.storage.sync`に保存し、デバイス間で同期されます。
 - `siteOverrides`(サイトごとの無効化設定)は閲覧履歴の断片になり得るため、あえて`chrome.storage.local`に保存し、Chrome同期やGoogleアカウントには一切送信されません。
+
+## 受け入れテスト(E2E)
+
+[Playwright](https://playwright.dev/docs/chrome-extensions)による受け入れテストを`tests/e2e/`に用意しています。拡張機能を実際にChromiumへロードし、Normal/Insert/Visualモードの切り替えや`x` `dd` `yy` `p` `u`などの基本編集操作、ポップアップからのON/OFF切り替えを検証します。
+
+```bash
+npm install
+npx playwright install --with-deps chromium
+npm run test:e2e
+# GUIのないサーバー環境では: xvfb-run -a npm run test:e2e
+```
+
+詳細やPRへの実行結果の添付方法は[tests/e2e/README.md](tests/e2e/README.md)を参照してください。

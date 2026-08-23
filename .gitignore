@@ -12,6 +12,11 @@ dist/
 build/
 *.log
 
+# Playwright test artifacts
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # Packaged/signed extension artifacts (contain a private key; never commit)
 *.pem
 *.crx

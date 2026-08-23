@@ -1,0 +1,13 @@
+{
+  "name": "chrome-extension-vimput",
+  "version": "0.1.0",
+  "private": true,
+  "description": "textarea・input・contenteditableにVim風のモーダル編集を追加するChrome拡張機能",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}
