@@ -9,7 +9,7 @@ module.exports = defineConfig({
   reporter: [["html", { open: "never" }]],
   timeout: 30_000,
   use: {
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
     video: "on",
   },
 });
