@@ -19,6 +19,12 @@ const test = base.extend({
       args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
       recordVideo: { dir: testInfo.outputPath("") },
     });
+    // launchPersistentContextを使うとPlaywright組み込みのcontext/pageフィクスチャを
+    // 経由しないため、動画の自動アタッチ(テストレポートへの添付)が行われない。
+    // そのため、以降に開かれたページを自前で記録しておき、context.close()後に
+    // 各ページの動画をtestInfo.attachで明示的にレポートへ添付する。
+    const pages = [];
+    context.on("page", (page) => pages.push(page));
     // launchPersistentContextは起動時に自動でabout:blankタブを1枚開く。
     // 使われないまま残ると動画エンコード対象が増えてcontext.close()が遅くなるため、即座に閉じる。
     const [initialPage] = context.pages();
@@ -27,6 +33,18 @@ const test = base.extend({
       await use(context);
     } finally {
       await context.close();
+      await Promise.all(
+        pages.map(async (page) => {
+          const video = page.video();
+          if (!video) return;
+          try {
+            const videoPath = await video.path();
+            await testInfo.attach("video", { path: videoPath, contentType: "video/webm" });
+          } catch {
+            // ページがコンテンツを読み込む前に閉じられた場合など、動画が存在しないことがある
+          }
+        })
+      );
       await fs.promises.rm(userDataDir, { recursive: true, force: true });
     }
   },
@@ -52,10 +70,19 @@ const test = base.extend({
     }
   },
 
-  page: async ({ context, fixtureUrl }, use) => {
+  page: async ({ context, fixtureUrl }, use, testInfo) => {
     const page = await context.newPage();
     await page.goto(fixtureUrl);
     await use(page);
+    // 動画と同様、独自のcontext/pageフィクスチャを使っているため
+    // スクリーンショットもPlaywrightの自動アタッチが働かない。
+    // テスト終了時点の画面を明示的にキャプチャしてレポートへ添付する。
+    try {
+      const screenshot = await page.screenshot();
+      await testInfo.attach("screenshot", { body: screenshot, contentType: "image/png" });
+    } catch {
+      // ページがすでに閉じている/クラッシュしている場合はスキップする
+    }
     await page.close();
   },
 });

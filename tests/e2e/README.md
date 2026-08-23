@@ -23,7 +23,9 @@ xvfb-run -a npm run test:e2e
 
 ## テスト結果の確認
 
-`use.video: "on"` を設定しているため、実行するたびに操作の様子を録画した動画が `test-results/` 配下に生成されます。また、以下のコマンドでHTMLレポート(録画・トレース付き)を閲覧できます。
+`use.video: "on"` を設定しているため、実行するたびに操作の様子を録画した動画が `test-results/` 配下に生成されます。
+
+拡張機能をロードするために `launchPersistentContext` を使う都合上、Playwright組み込みの`context`/`page`フィクスチャは使わず`tests/e2e/fixtures.js`で自前実装しています。そのままでは動画・スクリーンショットがPlaywrightのHTMLレポートに自動添付されないため、`fixtures.js`側でテスト終了時に動画とスクリーンショットを`testInfo.attach()`で明示的にレポートへ添付しています。以下のコマンドでHTMLレポート(動画・スクリーンショット・トレース付き)を閲覧できます。
 
 ```bash
 npm run test:e2e:report
