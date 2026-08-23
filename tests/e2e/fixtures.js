@@ -35,8 +35,11 @@ const test = base.extend({
 
   fixtureUrl: async ({}, use) => {
     const { server, url } = await startFixtureServer();
-    await use(url);
-    server.close();
+    try {
+      await use(url);
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
   },
 
   page: async ({ context, fixtureUrl }, use) => {
