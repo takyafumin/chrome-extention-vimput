@@ -1,0 +1,13 @@
+{
+  "name": "chrome-extention-vimput",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vim for Text Fields - Chrome拡張機能の受け入れテスト(Playwright)",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}

@@ -53,8 +53,22 @@ Chromeの`<textarea>`・`<input>`・`contenteditable`要素にVim風のモーダ
 - `src/content.js` — 設定の読み込み・モードインジケータ・フォーカス/キー入力の配線(グルーコード)
 - `popup/` — ツールバーのポップアップUI(ON/OFF切り替え)
 - `background.js` — インストール時の初期設定
+- `tests/e2e/` — Playwrightによる受け入れテスト(下記参照)
 
 読み込み順は `vim-engine.js` → `dom-helpers.js` → `vim-field.js` → `content.js`(`manifest.json`の`content_scripts.js`の順序に対応)。
+
+## 受け入れテスト(E2E)
+
+[Playwright](https://playwright.dev/docs/chrome-extensions)を用いて、拡張機能を実際にChromiumへ読み込んだ状態でモード切り替えや基本編集操作を検証する受け入れテストを `tests/e2e/` に用意しています。
+
+```bash
+npm install
+npx playwright install --with-deps chromium
+npm run test:e2e
+# GUIの無いサーバー環境では: xvfb-run -a npm run test:e2e
+```
+
+詳細やテスト結果(動画・HTMLレポート)の確認方法は [`tests/e2e/README.md`](tests/e2e/README.md) を参照してください。
 
 ## プライバシー
 
