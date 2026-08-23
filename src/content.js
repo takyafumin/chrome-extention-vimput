@@ -1,31 +1,37 @@
-// Glue layer: page-level settings (enable/disable), the Normal-mode
-// indicator badge + block-cursor rendering, and wiring VimField up to
-// real focus/keydown events. The modal-editing logic itself lives in
-// vim-field.js; element eligibility/IO helpers live in dom-helpers.js.
+// 結合レイヤー: ページ単位の設定（有効/無効）、Normal モードを示す
+// インジケータバッジ + ブロックカーソル描画、そして実際の focus/keydown
+// イベントへの VimField の配線を担う。モーダル編集ロジック自体は
+// vim-field.js に、要素の対象判定・入出力ヘルパーは dom-helpers.js にある。
 (function () {
   "use strict";
   const E = window.VimTextEngine;
   const D = window.VimDomHelpers;
 
   // ---------------------------------------------------------------------
-  // Settings (global toggle + per-site override)
+  // 設定（グローバルトグル + サイトごとの上書き）
   //
-  // globalEnabled lives in storage.sync — a single boolean, harmless to
-  // sync across the user's devices. siteOverrides maps hostnames to a
-  // choice and is privacy-sensitive (effectively a fragment of browsing
-  // history), so it stays in storage.local and is never sent through
-  // Chrome Sync (see background.js).
+  // globalEnabled は storage.sync に保存される — 単一の真偽値であり、
+  // ユーザーの複数デバイス間で同期しても問題ない。siteOverrides は
+  // ホスト名ごとの選択を保持するマップで、プライバシーに関わる
+  // （実質的に閲覧履歴の断片となる）ため storage.local に保存し、
+  // Chrome Sync には一切送信しない（background.js 参照）。
   //
-  // Loaded lazily (loadSettingsOnce, called from the focusin handler)
-  // rather than unconditionally at script load: with all_frames:true this
-  // script runs in every iframe on every page, and most iframes (ads,
-  // trackers, etc.) never contain a field a user actually focuses, so
-  // there's no reason to spend a storage read on them.
+  // loadSettingsOnce は（focusin ハンドラから呼び出す形で）遅延読み込み
+  // する。スクリプト読み込み時に無条件で読み込まないのは、all_frames:true
+  // によりこのスクリプトはページ内のすべての iframe（広告やトラッカーを
+  // 含む）で実行されるためであり、ユーザーが実際にフォーカスするフィールドを
+  // 持たない iframe がほとんどなので、それらでストレージ読み込みのコストを
+  // かける理由がないからである。
   // ---------------------------------------------------------------------
   let globalEnabled = true;
   let siteOverrides = {};
   let settingsLoadPromise = null;
 
+  /**
+   * グローバル設定とサイトごとの上書き設定を、初回呼び出し時にのみ
+   * ストレージから読み込む。2回目以降の呼び出しは同じ Promise を返す。
+   * @returns {Promise<void>} 設定の読み込みが完了したら解決される Promise
+   */
   function loadSettingsOnce() {
     if (!settingsLoadPromise) {
       settingsLoadPromise = Promise.all([
@@ -39,6 +45,11 @@
     return settingsLoadPromise;
   }
 
+  /**
+   * 現在のホストで本拡張機能が有効かどうかを判定する。
+   * サイトごとの上書き設定があればそれを優先し、なければグローバル設定に従う。
+   * @returns {boolean} 有効なら true
+   */
   function siteEnabled() {
     const host = location.hostname;
     if (Object.prototype.hasOwnProperty.call(siteOverrides, host)) return siteOverrides[host];
@@ -61,11 +72,16 @@
   });
 
   // ---------------------------------------------------------------------
-  // Mode indicator (shadow DOM overlay)
+  // モードインジケータ（Shadow DOM によるオーバーレイ）
   // ---------------------------------------------------------------------
   let indicatorHost = null;
   let indicatorEl = null;
 
+  /**
+   * モードインジケータ用の Shadow DOM ホスト要素を（まだ無ければ）生成し、
+   * ページに追加する。
+   * @returns {void}
+   */
   function ensureIndicator() {
     if (indicatorHost) return;
     indicatorHost = document.createElement("div");
@@ -87,6 +103,11 @@
     document.documentElement.appendChild(indicatorHost);
   }
 
+  /**
+   * インジケータバッジを、対象要素の直下（画面内に収まる位置）に配置する。
+   * @param {Element} el 基準となる要素
+   * @returns {void}
+   */
   function positionIndicator(el) {
     if (!indicatorHost) return;
     const r = el.getBoundingClientRect();
@@ -96,6 +117,13 @@
     indicatorHost.style.left = left + "px";
   }
 
+  /**
+   * 指定したモードのインジケータバッジを表示する。
+   * @param {Element} el バッジを表示する基準要素
+   * @param {"normal"|"insert"|"visual"} mode 現在のモード
+   * @param {"char"|"line"|null} [visualKind] Visual モードの種類（文字単位 or 行単位）
+   * @returns {void}
+   */
   function showIndicator(el, mode, visualKind) {
     ensureIndicator();
     let label = "NORMAL";
@@ -113,17 +141,26 @@
     indicatorHost.style.display = "block";
   }
 
+  /**
+   * インジケータバッジを非表示にする。
+   * @returns {void}
+   */
   function hideIndicator() {
     if (indicatorHost) indicatorHost.style.display = "none";
   }
 
   // ---------------------------------------------------------------------
-  // Wiring: track the focused eligible field and forward keydown to it
+  // 配線: フォーカス中の対象フィールドを追跡し、keydown をそのフィールドに転送する
   // ---------------------------------------------------------------------
   const fields = new WeakMap();
   let activeField = null;
   let activeEl = null;
 
+  /**
+   * 要素に対応する VimField インスタンスを取得する。まだ無ければ生成してキャッシュする。
+   * @param {Element} el 対象要素
+   * @returns {InstanceType<Window["VimField"]>} 対応する VimField インスタンス
+   */
   function getField(el) {
     let f = fields.get(el);
     if (!f) {
@@ -133,6 +170,10 @@
     return f;
   }
 
+  /**
+   * 現在アクティブなフィールドの状態に合わせて、インジケータの表示・非表示を更新する。
+   * @returns {void}
+   */
   function updateIndicatorForActive() {
     if (!activeField) {
       hideIndicator();
@@ -141,13 +182,19 @@
     showIndicator(activeField.el, activeField.mode, activeField.visualMode);
   }
 
-  // Textareas/inputs have no way to draw a real block cursor, so in Normal
-  // mode we fake one by selecting the single character under the cursor —
-  // the browser's native selection highlight then reads as a block. This is
-  // purely cosmetic: getCursor() always returns selectionStart, so nothing
-  // in the engine's own logic is affected by selectionEnd being extended
-  // here. Insert mode keeps the real collapsed caret; Visual mode already
-  // shows a real (possibly multi-char) selection and is left alone.
+  // テキストエリアや input には本物のブロックカーソルを描画する手段がないため、
+  // Normal モードではカーソル位置の1文字を選択状態にすることで代用している —
+  // ブラウザ標準の選択ハイライトがブロックカーソルのように見える。これは
+  // 見た目だけの処理である点に注意: getCursor() は常に selectionStart を
+  // 返すため、ここで selectionEnd を拡張しても、エンジン自身のロジックには
+  // 何も影響しない。Insert モードでは本物の折りたたまれたキャレットのままにし、
+  // Visual モードは（既に本物の、場合によっては複数文字にまたがる）選択が
+  // 表示されているのでそのままにする。
+  /**
+   * 現在のモードに応じて、Normal モード用の疑似ブロックカーソル表示を適用する。
+   * @param {InstanceType<Window["VimField"]>|null} field 対象の VimField
+   * @returns {void}
+   */
   function applyCursorDisplay(field) {
     if (!field || field.mode !== "normal") return;
     const text = field.getText();
@@ -157,19 +204,21 @@
     field.setSel(cur, blockEnd > cur ? blockEnd : cur);
   }
 
-  // Listeners are attached to `window` (not `document`) with capture, and the
-  // content script runs at document_start, so we get first crack at keydown
-  // before any of the page's own scripts have even run — some sites react to
-  // Escape themselves (closing a modal/tooltip) and blur the field as a side
-  // effect, which would otherwise beat us to it.
+  // リスナーは（document ではなく）window に capture フェーズで登録しており、
+  // かつコンテンツスクリプトは document_start で実行されるため、ページ自身の
+  // スクリプトが動き出す前に keydown を最初に捕捉できる。一部のサイトは
+  // Escape キー自体に反応してモーダルやツールチップを閉じ、その副作用として
+  // フィールドから blur させることがあり、これを放置すると本来こちらが
+  // 処理すべき Escape を横取りされてしまう。
   window.addEventListener(
     "focusin",
     (e) => {
       const el = e.target;
       loadSettingsOnce().then(() => {
-        // Settings may still have been loading at the moment this focus
-        // happened (first focus in a fresh frame); re-validate once the
-        // real value is known instead of trusting the optimistic default.
+        // このフォーカスが発生した瞬間には設定がまだ読み込み中だった
+        // 可能性がある（新しいフレームでの最初のフォーカスなど）。
+        // 楽観的なデフォルト値を信用せず、実際の値が判明した時点で
+        // 改めて検証する。
         if (el === activeEl && !siteEnabled()) {
           activeField = null;
           activeEl = null;
@@ -185,9 +234,10 @@
       activeEl = el;
       activeField = getField(el);
       if (activeField.preserveModeOnNextFocus) {
-        // We just recovered focus ourselves (see the keydown handler below)
-        // after something outside our control blurred the field; keep the
-        // mode the user was in instead of snapping back to Insert.
+        // ちょうど自分自身でフォーカスを取り戻した直後（下の keydown
+        // ハンドラを参照）で、制御外の何かによってフィールドが blur
+        // させられた後なので、Insert モードへ戻さずユーザーが元々
+        // いたモードを維持する。
         activeField.preserveModeOnNextFocus = false;
       } else {
         activeField.mode = "insert";
@@ -230,13 +280,14 @@
         e.stopPropagation();
         applyCursorDisplay(field);
         if (modeChanged) {
-          // Guard against something outside our control (OS/IME/browser-
-          // level handling of certain keys, notably Escape) yanking focus
-          // away right after we've handled a key ourselves. Scoped to mode
-          // transitions only — the observed conflict was specifically a
-          // site's own Escape/close-modal handler racing ours, and doing
-          // this on every single motion keystroke would mean allocating and
-          // scheduling a timer on every keypress for no benefit.
+          // こちらでキー処理を終えた直後に、制御外の何か（OS/IME/
+          // ブラウザレベルでの特定キー、特に Escape の扱い）によって
+          // フォーカスが奪われるケースに対する保険。モード遷移が
+          // 起きたときだけに限定しているのは、実際に観測された競合が
+          // 特定サイトの Escape/モーダルクローズ処理とこちらの処理との
+          // 競合だったためであり、すべての単なるモーション操作のたびに
+          // これを行うと、得られる利益がないままキー入力ごとにタイマーを
+          // 割り当ててスケジューリングすることになってしまう。
           setTimeout(() => {
             if (document.activeElement !== el && document.body.contains(el)) {
               field.preserveModeOnNextFocus = true;
