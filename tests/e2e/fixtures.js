@@ -10,12 +10,17 @@ const { chromium, test: base, expect } = require("@playwright/test");
 const { startFixtureServer } = require("./server");
 
 const EXTENSION_PATH = path.join(__dirname, "..", "..");
+// 各操作の間に挟むディレイ(ms)。0だと全操作が一瞬で終わり、録画される動画も
+// 1秒に満たない長さになって目視で内容を追えなくなるため、既定でwaitを入れる。
+// 環境変数 PW_SLOW_MO で上書き可能(例: CIで無効化したい場合は `PW_SLOW_MO=0`)。
+const SLOW_MO = process.env.PW_SLOW_MO !== undefined ? Number(process.env.PW_SLOW_MO) : 300;
 
 const test = base.extend({
   context: async ({}, use, testInfo) => {
     const userDataDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "vimput-pw-"));
     const context = await chromium.launchPersistentContext(userDataDir, {
       headless: false,
+      slowMo: SLOW_MO,
       args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
       recordVideo: { dir: testInfo.outputPath("") },
     });

@@ -25,6 +25,8 @@ xvfb-run -a npm run test:e2e
 
 `use.video: "on"` を設定しているため、実行するたびに操作の様子を録画した動画が `test-results/` 配下に生成されます。
 
+Playwrightは各操作(クリックやキー入力など)を可能な限り高速に実行するため、既定のままだと動画が1秒未満で終わってしまい、何が起きているか目視で確認できません。そのため `tests/e2e/fixtures.js` では `launchPersistentContext` に `slowMo: 300`(ms)を設定し、各操作の間に待機を挟むことで動画の内容を追いやすくしています。実行時間を優先したい場合は環境変数 `PW_SLOW_MO` で上書きできます(例: `PW_SLOW_MO=0 npm run test:e2e`)。
+
 拡張機能をロードするために `launchPersistentContext` を使う都合上、Playwright組み込みの`context`/`page`フィクスチャは使わず`tests/e2e/fixtures.js`で自前実装しています。そのままでは動画・スクリーンショットがPlaywrightのHTMLレポートに自動添付されないため、`fixtures.js`側でテスト終了時に動画とスクリーンショットを`testInfo.attach()`で明示的にレポートへ添付しています。以下のコマンドでHTMLレポート(動画・スクリーンショット・トレース付き)を閲覧できます。
 
 ```bash
