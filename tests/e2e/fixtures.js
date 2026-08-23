@@ -43,6 +43,11 @@ const test = base.extend({
     try {
       await use(url);
     } finally {
+      // ChromeがHTTP keep-aliveでソケットを保持したままだと、
+      // server.close()はテスト側のcontextが閉じてソケットが切れるまで
+      // コールバックを呼ばず、テストタイムアウト(30s)まで固まってしまう。
+      // 明示的に全接続を切断してから閉じることで即座に完了させる。
+      server.closeAllConnections();
       await new Promise((resolve) => server.close(resolve));
     }
   },
